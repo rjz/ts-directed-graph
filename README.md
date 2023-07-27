@@ -31,13 +31,13 @@ graph.addEdge('N-2', 'N-3')
 
 ### `DirectedAcyclicGraph`
 
-See [`DirectedGraph`](#DirectedGraph), but expect an `AcyclicViolationError`
-when attempting to introduce a cyclic relationship between nodes
+See [`DirectedGraph`](#directedgraph), but expect an `AcyclicViolationError`
+when attempting to introduce a cyclic relationship between nodes.
 
 ### `Serialize`
 
 `ts-directed-graph` includes a basic [Mermaid][mermaid] serializer to help
-[visualize and debug graphs][mermaid-live]
+[visualize and debug graphs][mermaid-live].
 
 ```ts
 import { Serialize } from 'ts-directed-graph'
