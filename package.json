@@ -1,0 +1,21 @@
+{
+  "name": "@rjz/ts-directed-graph",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.4.5",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "prettier": "^3.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "NODE_ENV=test mocha -r ts-node/register src/*_spec.ts"
+  }
+}
