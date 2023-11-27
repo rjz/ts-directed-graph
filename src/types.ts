@@ -7,3 +7,5 @@ export interface Node {
 export function isNode(x: any): x is Node {
   return typeof x === 'object' && typeof x.id === 'string'
 }
+
+export type Edge = [from: Token, to: Token]

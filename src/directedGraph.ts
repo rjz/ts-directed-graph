@@ -1,4 +1,4 @@
-import { Node, Token } from './types'
+import { Node, Edge, Token } from './types'
 
 interface Emitter {
   emit(event: string, ...args: any[]): void
@@ -15,8 +15,6 @@ export interface DirectedGraphOptions {
    */
   emitter?: Emitter
 }
-
-export type Edge = [from: Token, to: Token]
 
 /**
  *  DirectedGraph implements exactly that
