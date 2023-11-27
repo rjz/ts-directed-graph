@@ -1,12 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const noopEmitter = {
+    emit() { },
+};
 /**
  *  DirectedGraph implements exactly that
  */
 class DirectedGraph {
-    constructor() {
+    constructor(opts) {
+        var _a;
         this.nodesByToken = new Map();
         this.edgesByNode = new Map();
+        this.emitter = (_a = opts === null || opts === void 0 ? void 0 : opts.emitter) !== null && _a !== void 0 ? _a : noopEmitter;
     }
     assertNodeExists(id) {
         if (!this.nodesByToken.has(id)) {
@@ -20,9 +25,11 @@ class DirectedGraph {
         }
         this.nodesByToken.set(id, n);
         this.edgesByNode.set(id, new Set());
+        this.emitter.emit('node:added', n);
         return id;
     }
     removeNode(id) {
+        const node = this.getNode(id);
         this.edgesByNode.delete(id);
         this.nodesByToken.delete(id);
         // Clean up edgesByNode referencing the deleted node. If removal becomes a
@@ -32,6 +39,7 @@ class DirectedGraph {
                 cs.delete(id);
             }
         }
+        this.emitter.emit('node:removed', node);
     }
     /**
      *  Replace the node identified by `node.id` in situ, preserving any
@@ -41,6 +49,7 @@ class DirectedGraph {
     replaceNode(node) {
         this.assertNodeExists(node.id);
         this.nodesByToken.set(node.id, node);
+        this.emitter.emit('node:replaced', node);
     }
     nodes() {
         return new Set(this.nodesByToken.values());
@@ -69,6 +78,7 @@ class DirectedGraph {
         this.assertNodeExists(from);
         this.assertNodeExists(to);
         this.edgesByNode.get(from).add(to);
+        this.emitter.emit('edge:added', [from, to]);
     }
     edgeExists(from, to) {
         return this.edgesByNode.get(from).has(to);
