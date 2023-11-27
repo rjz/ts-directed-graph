@@ -29,6 +29,33 @@ graph.addEdge('N-1', 'N-2')
 graph.addEdge('N-2', 'N-3')
 ```
 
+#### Events
+
+An instance of `DirectedGraph` can be configured to emit events by injecting an
+`emitter` to its constructor:
+
+```ts
+// Replace with the appropriate emitter for the environment
+import EventEmitter from 'node:events'
+
+const emitter = new EventEmitter()
+
+const graph = new G.DirectedGraph<G.Node>({
+  emitter
+})
+
+emitter.on('node:added', (arg0) => { /* ... */ })
+```
+
+For an instance of `DirectedGraph<T>`, the event list includes:
+
+| event           | arg0   |
+| --------------- | ------ |
+| `node:added`    | `T`    |
+| `node:removed`  | `T`    |
+| `node:replaced` | `T`    |
+| `edge:added`    | `Edge` |
+
 ### `DirectedAcyclicGraph`
 
 See [`DirectedGraph`](#directedgraph), but expect an `AcyclicViolationError`

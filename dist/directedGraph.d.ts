@@ -1,10 +1,23 @@
 import { Node, Token } from './types';
+interface Emitter {
+    emit(event: string, ...args: any[]): void;
+}
+export interface DirectedGraphOptions {
+    /**
+     *  An (optional) event emitter. If injected, the `DirectedGraph` will emit
+     *  events as graph data are modified.
+     */
+    emitter?: Emitter;
+}
+export type Edge = [from: Token, to: Token];
 /**
  *  DirectedGraph implements exactly that
  */
 export default class DirectedGraph<T extends Node> {
     private nodesByToken;
     private edgesByNode;
+    protected emitter: Emitter;
+    constructor(opts?: DirectedGraphOptions);
     protected assertNodeExists(id: Token): void;
     addNode(n: T): Token;
     removeNode(id: Token): void;
@@ -15,7 +28,7 @@ export default class DirectedGraph<T extends Node> {
      */
     replaceNode(node: T): void;
     nodes(): Set<T>;
-    edges(): Set<[from: Token, to: Token]>;
+    edges(): Set<Edge>;
     has(t: Token): boolean;
     getNode(t: Token): T;
     /**
@@ -32,3 +45,4 @@ export default class DirectedGraph<T extends Node> {
      */
     visit(t: Token, iter: (node: T) => void): void;
 }
+export {};

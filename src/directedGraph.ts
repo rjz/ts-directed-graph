@@ -1,11 +1,35 @@
 import { Node, Token } from './types'
 
+interface Emitter {
+  emit(event: string, ...args: any[]): void
+}
+
+const noopEmitter: Emitter = {
+  emit() {},
+}
+
+export interface DirectedGraphOptions {
+  /**
+   *  An (optional) event emitter. If injected, the `DirectedGraph` will emit
+   *  events as graph data are modified.
+   */
+  emitter?: Emitter
+}
+
+export type Edge = [from: Token, to: Token]
+
 /**
  *  DirectedGraph implements exactly that
  */
 export default class DirectedGraph<T extends Node> {
   private nodesByToken = new Map<Token, T>()
   private edgesByNode = new Map<Token, Set<Token>>()
+
+  protected emitter: Emitter
+
+  constructor(opts?: DirectedGraphOptions) {
+    this.emitter = opts?.emitter ?? noopEmitter
+  }
 
   protected assertNodeExists(id: Token) {
     if (!this.nodesByToken.has(id)) {
@@ -21,11 +45,14 @@ export default class DirectedGraph<T extends Node> {
 
     this.nodesByToken.set(id, n)
     this.edgesByNode.set(id, new Set<Token>())
+    this.emitter.emit('node:added', n)
 
     return id
   }
 
   removeNode(id: Token): void {
+    const node = this.getNode(id)
+
     this.edgesByNode.delete(id)
     this.nodesByToken.delete(id)
 
@@ -36,6 +63,8 @@ export default class DirectedGraph<T extends Node> {
         cs.delete(id)
       }
     }
+
+    this.emitter.emit('node:removed', node)
   }
 
   /**
@@ -46,13 +75,15 @@ export default class DirectedGraph<T extends Node> {
   replaceNode(node: T): void {
     this.assertNodeExists(node.id)
     this.nodesByToken.set(node.id, node)
+
+    this.emitter.emit('node:replaced', node)
   }
 
   nodes(): Set<T> {
     return new Set(this.nodesByToken.values())
   }
 
-  edges(): Set<[from: Token, to: Token]> {
+  edges(): Set<Edge> {
     const edges = new Set<[from: Token, to: Token]>()
     for (const [n, cs] of this.edgesByNode) {
       for (const c of cs) {
@@ -80,6 +111,7 @@ export default class DirectedGraph<T extends Node> {
     this.assertNodeExists(from)
     this.assertNodeExists(to)
     this.edgesByNode.get(from)!.add(to)
+    this.emitter.emit('edge:added', [from, to])
   }
 
   edgeExists(from: Token, to: Token): boolean {
