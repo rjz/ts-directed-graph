@@ -3,14 +3,14 @@ import { assert } from 'chai'
 
 import DirectedGraph from './directedGraph'
 
-type TestNodeType = { id: string }
+type TestNodeType = { id: string; value: number }
 
 describe('DirectedGraph', function () {
   function setup() {
     const graph = new DirectedGraph<TestNodeType>()
 
-    const n1 = graph.addNode({ id: 'N-1' })
-    const n2 = graph.addNode({ id: 'N-2' })
+    const n1 = graph.addNode({ id: 'N-1', value: 0 })
+    const n2 = graph.addNode({ id: 'N-2', value: 0 })
 
     return { graph, n1, n2 }
   }
@@ -23,6 +23,12 @@ describe('DirectedGraph', function () {
     assert.ok(graph.getNode('N-1'), 'node not found')
     assert.equal(1, graph.edgesFrom('N-1').size, 'missing edge from N-1')
     assert.equal(0, graph.edgesFrom('N-2').size, 'missing edge from N-1')
+  })
+
+  it('.replaceNode', function () {
+    const { graph, n1, n2 } = setup()
+    graph.replaceNode({ id: 'N-1', value: 1 })
+    assert.equal(graph.getNode('N-1').value, 1)
   })
 
   it('.removeNode', function () {

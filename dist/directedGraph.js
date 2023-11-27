@@ -1,9 +1,5 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const assert_1 = __importDefault(require("assert"));
 /**
  *  DirectedGraph implements exactly that
  */
@@ -12,9 +8,16 @@ class DirectedGraph {
         this.nodesByToken = new Map();
         this.edgesByNode = new Map();
     }
+    assertNodeExists(id) {
+        if (!this.nodesByToken.has(id)) {
+            throw new Error(`Node "${id}" not present in graph`);
+        }
+    }
     addNode(n) {
         const { id } = n;
-        (0, assert_1.default)(!this.nodesByToken.has(id), `Node already exists "${n.id}"`);
+        if (this.nodesByToken.has(id)) {
+            throw new Error(`Node already exists "${id}"`);
+        }
         this.nodesByToken.set(id, n);
         this.edgesByNode.set(id, new Set());
         return id;
@@ -29,6 +32,15 @@ class DirectedGraph {
                 cs.delete(id);
             }
         }
+    }
+    /**
+     *  Replace the node identified by `node.id` in situ, preserving any
+     *  connected edges. Note that it's up to the user to ensure compatibility
+     *  between the existing node and its replacement
+     */
+    replaceNode(node) {
+        this.assertNodeExists(node.id);
+        this.nodesByToken.set(node.id, node);
     }
     nodes() {
         return new Set(this.nodesByToken.values());
@@ -47,25 +59,25 @@ class DirectedGraph {
     }
     getNode(t) {
         const n = this.nodesByToken.get(t);
-        (0, assert_1.default)(n, `Node not found '${t}'`);
+        this.assertNodeExists(t);
         return n;
     }
     /**
      *  Add a single edge addEdgeing the two nodes.
      */
     addEdge(from, to) {
-        (0, assert_1.default)(this.has(from), `Node "${from}" not present in graph`);
-        (0, assert_1.default)(this.has(to), `Node "${to}" not present in graph`);
+        this.assertNodeExists(from);
+        this.assertNodeExists(to);
         this.edgesByNode.get(from).add(to);
     }
     edgeExists(from, to) {
         return this.edgesByNode.get(from).has(to);
     }
     /**
-     *  Return the set of nodes addEdgeed to `n`
+     *  Return the set of nodes added to `n`
      */
     edgesFrom(t) {
-        (0, assert_1.default)(this.has(t), `Node "${t}" not present in graph`);
+        this.assertNodeExists(t);
         const edgesFrom = new Set();
         for (const c of this.edgesByNode.get(t)) {
             edgesFrom.add(this.getNode(c));

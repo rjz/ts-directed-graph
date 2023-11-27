@@ -38,6 +38,16 @@ export default class DirectedGraph<T extends Node> {
     }
   }
 
+  /**
+   *  Replace the node identified by `node.id` in situ, preserving any
+   *  connected edges. Note that it's up to the user to ensure compatibility
+   *  between the existing node and its replacement
+   */
+  replaceNode(node: T): void {
+    this.assertNodeExists(node.id)
+    this.nodesByToken.set(node.id, node)
+  }
+
   nodes(): Set<T> {
     return new Set(this.nodesByToken.values())
   }
