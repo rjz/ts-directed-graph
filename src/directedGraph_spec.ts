@@ -21,8 +21,8 @@ describe('DirectedGraph', function () {
     graph.addEdge(n1, n2)
 
     assert.ok(graph.getNode('N-1'), 'node not found')
-    assert.equal(1, graph.edgesFrom('N-1').size, 'missing addEdgeion from N-1')
-    assert.equal(0, graph.edgesFrom('N-2').size, 'missing addEdgeion from N-1')
+    assert.equal(1, graph.edgesFrom('N-1').size, 'missing edge from N-1')
+    assert.equal(0, graph.edgesFrom('N-2').size, 'missing edge from N-1')
   })
 
   it('.removeNode', function () {
@@ -32,7 +32,7 @@ describe('DirectedGraph', function () {
 
     graph.removeNode(n2)
 
-    assert.throws(() => graph.getNode('N-2'), 'Node not found')
+    assert.throws(() => graph.getNode('N-2'), 'Node "N-2" not present in graph')
     assert.equal(
       0,
       graph.edgesFrom('N-1').size,

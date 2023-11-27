@@ -1,5 +1,3 @@
-import assert from 'assert'
-
 import { Node, Token } from './types'
 
 /**
@@ -9,9 +7,18 @@ export default class DirectedGraph<T extends Node> {
   private nodesByToken = new Map<Token, T>()
   private edgesByNode = new Map<Token, Set<Token>>()
 
+  protected assertNodeExists(id: Token) {
+    if (!this.nodesByToken.has(id)) {
+      throw new Error(`Node "${id}" not present in graph`)
+    }
+  }
+
   addNode(n: T): Token {
     const { id } = n
-    assert(!this.nodesByToken.has(id), `Node already exists "${n.id}"`)
+    if (this.nodesByToken.has(id)) {
+      throw new Error(`Node already exists "${id}"`)
+    }
+
     this.nodesByToken.set(id, n)
     this.edgesByNode.set(id, new Set<Token>())
 
@@ -52,16 +59,16 @@ export default class DirectedGraph<T extends Node> {
 
   getNode(t: Token): T {
     const n = this.nodesByToken.get(t)
-    assert(n, `Node not found '${t}'`)
-    return n
+    this.assertNodeExists(t)
+    return n!
   }
 
   /**
    *  Add a single edge addEdgeing the two nodes.
    */
   addEdge(from: Token, to: Token): void {
-    assert(this.has(from), `Node "${from}" not present in graph`)
-    assert(this.has(to), `Node "${to}" not present in graph`)
+    this.assertNodeExists(from)
+    this.assertNodeExists(to)
     this.edgesByNode.get(from)!.add(to)
   }
 
@@ -70,10 +77,10 @@ export default class DirectedGraph<T extends Node> {
   }
 
   /**
-   *  Return the set of nodes addEdgeed to `n`
+   *  Return the set of nodes added to `n`
    */
   edgesFrom(t: Token): Set<T> {
-    assert(this.has(t), `Node "${t}" not present in graph`)
+    this.assertNodeExists(t)
     const edgesFrom = new Set<T>()
     for (const c of this.edgesByNode.get(t)!) {
       edgesFrom.add(this.getNode(c))
