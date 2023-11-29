@@ -11,4 +11,10 @@ export default class DirectedAcyclicGraph<T extends Node> extends DirectedGraph<
      *  Check for cyclic relationships
      */
     addEdge(from: Token, to: Token): void;
+    protected _populate(id: Token, graph: DirectedAcyclicGraph<T>): DirectedAcyclicGraph<T>;
+    /**
+     *  Returns a new `DirectedAcyclicGraph` populated with the subgraph starting
+     *  at `id`
+     */
+    subgraph(id: Token): DirectedAcyclicGraph<T>;
 }
