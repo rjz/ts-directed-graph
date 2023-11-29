@@ -1,6 +1,6 @@
 import { Node, Edge, Token } from './types';
 interface Emitter {
-    emit(event: string, ...args: any[]): void;
+    emit(eventName: string | Symbol, ...args: any[]): void;
 }
 export interface DirectedGraphOptions {
     /**

@@ -25,4 +25,26 @@ export default class DirectedAcyclicGraph<
 
     super.addEdge(from, to)
   }
+
+  protected _populate(id: Token, graph: DirectedAcyclicGraph<T>) {
+    const root = this.getNode(id)
+    graph.addNode(root)
+
+    const nodes = this.edgesFrom(id)
+    for (const n of nodes) {
+      this._populate(n.id, graph)
+      graph.addEdge(root.id, n.id)
+    }
+
+    return graph
+  }
+
+  /**
+   *  Returns a new `DirectedAcyclicGraph` populated with the subgraph starting
+   *  at `id`
+   */
+  subgraph(id: Token): DirectedAcyclicGraph<T> {
+    const copy = new DirectedAcyclicGraph<T>()
+    return this._populate(id, copy)
+  }
 }

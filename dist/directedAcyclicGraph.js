@@ -24,6 +24,24 @@ class DirectedAcyclicGraph extends directedGraph_1.default {
         });
         super.addEdge(from, to);
     }
+    _populate(id, graph) {
+        const root = this.getNode(id);
+        graph.addNode(root);
+        const nodes = this.edgesFrom(id);
+        for (const n of nodes) {
+            this._populate(n.id, graph);
+            graph.addEdge(root.id, n.id);
+        }
+        return graph;
+    }
+    /**
+     *  Returns a new `DirectedAcyclicGraph` populated with the subgraph starting
+     *  at `id`
+     */
+    subgraph(id) {
+        const copy = new DirectedAcyclicGraph();
+        return this._populate(id, copy);
+    }
 }
 exports.default = DirectedAcyclicGraph;
 //# sourceMappingURL=directedAcyclicGraph.js.map
