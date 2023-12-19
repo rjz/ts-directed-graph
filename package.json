@@ -14,8 +14,15 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   },
+  "mocha": {
+    "recursive": true,
+    "require": "ts-node/register",
+    "extension": ["ts"],
+    "spec": ["src"],
+    "watch-files": ["src"]
+  },
   "scripts": {
     "build": "tsc",
-    "test": "NODE_ENV=test mocha -r ts-node/register src/*_spec.ts"
+    "test": "NODE_ENV=test TS_NODE_TRANSPILE_ONLY=true mocha"
   }
 }
