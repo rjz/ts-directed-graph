@@ -13,6 +13,7 @@ export interface DirectedGraphOptions {
  *  DirectedGraph implements exactly that
  */
 export default class DirectedGraph<T extends Node> {
+    #private;
     private nodesByToken;
     private edgesByNode;
     protected emitter: Emitter;
@@ -21,17 +22,23 @@ export default class DirectedGraph<T extends Node> {
     addNode(n: T): Token;
     removeNode(id: Token): void;
     /**
+     *  Removes the subject node, recursively pruning any subtrees detached in the
+     *  removal process
+     */
+    pruneNode(id: Token): void;
+    /**
      *  Replace the node identified by `node.id` in situ, preserving any
      *  connected edges. Note that it's up to the user to ensure compatibility
      *  between the existing node and its replacement
      */
     replaceNode(node: T): void;
+    roots(): Set<Token>;
     nodes(): Set<T>;
     edges(): Set<Edge>;
     has(t: Token): boolean;
     getNode(t: Token): T;
     /**
-     *  Add a single edge addEdgeing the two nodes.
+     *  Add a single edge connecting the two nodes.
      */
     addEdge(from: Token, to: Token): void;
     edgeExists(from: Token, to: Token): boolean;

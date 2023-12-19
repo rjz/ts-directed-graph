@@ -22,6 +22,7 @@ export interface DirectedGraphOptions {
 export default class DirectedGraph<T extends Node> {
   private nodesByToken = new Map<Token, T>()
   private edgesByNode = new Map<Token, Set<Token>>()
+  #reverseEdgesByNode = new Map<Token, Set<Token>>()
 
   protected emitter: Emitter
 
@@ -42,6 +43,7 @@ export default class DirectedGraph<T extends Node> {
     }
 
     this.nodesByToken.set(id, n)
+    this.#reverseEdgesByNode.set(id, new Set<Token>())
     this.edgesByNode.set(id, new Set<Token>())
     this.emitter.emit('node:added', n)
 
@@ -51,16 +53,17 @@ export default class DirectedGraph<T extends Node> {
   removeNode(id: Token): void {
     const node = this.getNode(id)
 
+    for (const t of this.#reverseEdgesByNode.get(id)!) {
+      this.edgesByNode.get(t)!.delete(id)
+    }
+
+    for (const t of this.edgesByNode.get(id)!) {
+      this.#reverseEdgesByNode.get(t)!.delete(id)
+    }
+
     this.edgesByNode.delete(id)
     this.nodesByToken.delete(id)
-
-    // Clean up edgesByNode referencing the deleted node. If removal becomes a
-    // frequent operation, we could also just remove these.
-    for (const [t, cs] of this.edgesByNode) {
-      if (cs.has(id)) {
-        cs.delete(id)
-      }
-    }
+    this.#reverseEdgesByNode.delete(id)
 
     this.emitter.emit('node:removed', node)
   }
@@ -94,18 +97,9 @@ export default class DirectedGraph<T extends Node> {
   }
 
   roots(): Set<Token> {
-    // TODO: consider maintaining a bidirectional edgeset to trade datastructure
-    // complexity for an O(1) lookup here
-    const tokensWithEdges = new Set<Token>()
-    for (const tokens of this.edgesByNode.values()) {
-      for (const t of tokens) {
-        tokensWithEdges.add(t)
-      }
-    }
-
     const roots = new Set<Token>()
-    for (const t of this.nodesByToken.keys()) {
-      if (!tokensWithEdges.has(t)) {
+    for (const [t, edges] of this.#reverseEdgesByNode.entries()) {
+      if (edges.size === 0) {
         roots.add(t)
       }
     }
@@ -145,6 +139,7 @@ export default class DirectedGraph<T extends Node> {
     this.assertNodeExists(from)
     this.assertNodeExists(to)
     this.edgesByNode.get(from)!.add(to)
+    this.#reverseEdgesByNode.get(to)!.add(from)
     this.emitter.emit('edge:added', [from, to])
   }
 

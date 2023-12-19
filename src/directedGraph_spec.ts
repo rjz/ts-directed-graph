@@ -102,10 +102,11 @@ describe('DirectedGraph', function () {
         () => graph.getNode('N-2'),
         'Node "N-2" not present in graph',
       )
+
       assert.equal(
         0,
         graph.edgesFrom('N-1').size,
-        'unexpected addEdgeion from N-1',
+        'unexpected edge from N-1',
       )
     })
 
