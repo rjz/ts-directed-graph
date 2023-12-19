@@ -121,4 +121,50 @@ describe('DirectedGraph', function () {
       return p
     })
   })
+
+  describe('.roots', function () {
+    it('returns nodes without inbound edges', function () {
+      const { graph, n1, n2 } = setup()
+
+      graph.addEdge(n1, n2)
+
+      const rootTokens = Array.from(graph.roots())
+      assert.deepEqual(rootTokens, [n1])
+    })
+  })
+
+  describe('.pruneNode', function () {
+    it('prunes cyclic references nodes', function () {
+      const { graph, n1, n2 } = setup()
+
+      graph.addEdge(n1, n2)
+
+      const n3 = graph.addNode({ id: 'N-3', value: 0 })
+      graph.addEdge(n2, n3)
+      graph.addEdge(n3, n2)
+
+      graph.pruneNode(n2)
+
+      assert.deepEqual(
+        Array.from(graph.nodes()).map((n) => n.id),
+        [n1],
+      )
+    })
+
+    it('prunes newly-orphaned nodes', function () {
+      const { graph, n1, n2 } = setup()
+
+      const n3 = graph.addNode({ id: 'N-3', value: 0 })
+
+      graph.addEdge(n1, n2)
+      graph.addEdge(n2, n3)
+
+      graph.pruneNode(n2)
+
+      assert.deepEqual(
+        Array.from(graph.nodes()).map((n) => n.id),
+        [n1],
+      )
+    })
+  })
 })

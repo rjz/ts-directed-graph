@@ -66,6 +66,22 @@ export default class DirectedGraph<T extends Node> {
   }
 
   /**
+   *  Removes the subject node, recursively pruning any subtrees detached in the
+   *  removal process
+   */
+  pruneNode(id: Token): void {
+    const roots = this.roots()
+    this.removeNode(id)
+
+    const newRoots = this.roots()
+    for (const token of newRoots.values()) {
+      if (!roots.has(token)) {
+        this.pruneNode(token)
+      }
+    }
+  }
+
+  /**
    *  Replace the node identified by `node.id` in situ, preserving any
    *  connected edges. Note that it's up to the user to ensure compatibility
    *  between the existing node and its replacement
@@ -75,6 +91,26 @@ export default class DirectedGraph<T extends Node> {
     this.nodesByToken.set(node.id, node)
 
     this.emitter.emit('node:replaced', node)
+  }
+
+  roots(): Set<Token> {
+    // TODO: consider maintaining a bidirectional edgeset to trade datastructure
+    // complexity for an O(1) lookup here
+    const tokensWithEdges = new Set<Token>()
+    for (const tokens of this.edgesByNode.values()) {
+      for (const t of tokens) {
+        tokensWithEdges.add(t)
+      }
+    }
+
+    const roots = new Set<Token>()
+    for (const t of this.nodesByToken.keys()) {
+      if (!tokensWithEdges.has(t)) {
+        roots.add(t)
+      }
+    }
+
+    return roots
   }
 
   nodes(): Set<T> {
@@ -103,7 +139,7 @@ export default class DirectedGraph<T extends Node> {
   }
 
   /**
-   *  Add a single edge addEdgeing the two nodes.
+   *  Add a single edge connecting the two nodes.
    */
   addEdge(from: Token, to: Token): void {
     this.assertNodeExists(from)
