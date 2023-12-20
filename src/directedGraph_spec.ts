@@ -102,11 +102,8 @@ describe('DirectedGraph', function () {
         () => graph.getNode('N-2'),
         'Node "N-2" not present in graph',
       )
-      assert.equal(
-        0,
-        graph.edgesFrom('N-1').size,
-        'unexpected addEdgeion from N-1',
-      )
+
+      assert.equal(0, graph.edgesFrom('N-1').size, 'unexpected edge from N-1')
     })
 
     it('emits "node:removed" event', function () {
@@ -119,6 +116,72 @@ describe('DirectedGraph', function () {
       graph.removeNode(n2)
 
       return p
+    })
+
+    describe('when strategy = PRUNE', function () {
+      it('prunes cyclic references nodes', function () {
+        const { graph, n1, n2 } = setup()
+
+        graph.addEdge(n1, n2)
+
+        const n3 = graph.addNode({ id: 'N-3', value: 0 })
+        graph.addEdge(n2, n3)
+        graph.addEdge(n3, n2)
+
+        graph.removeNode(n2, 'PRUNE')
+
+        assert.deepEqual(
+          Array.from(graph.nodes()).map((n) => n.id),
+          [n1],
+        )
+      })
+
+      it('prunes newly-orphaned nodes', function () {
+        const { graph, n1, n2 } = setup()
+
+        const n3 = graph.addNode({ id: 'N-3', value: 0 })
+
+        graph.addEdge(n1, n2)
+        graph.addEdge(n2, n3)
+
+        graph.removeNode(n2, 'PRUNE')
+
+        assert.deepEqual(
+          Array.from(graph.nodes()).map((n) => n.id),
+          [n1],
+        )
+      })
+    })
+
+    describe('when strategy = COLLAPSE', function () {
+      it('directly connects outbound/inbound nodes', function () {
+        const { graph, n1, n2 } = setup()
+
+        const n3 = graph.addNode({ id: 'N-3', value: 0 })
+
+        graph.addEdge(n1, n2)
+        graph.addEdge(n2, n3)
+
+        graph.removeNode(n2, 'COLLAPSE')
+
+        assert.deepEqual(
+          Array.from(graph.nodes()).map((n) => n.id),
+          [n1, n3],
+        )
+
+        assert.ok(graph.edgeExists(n1, n3))
+      })
+    })
+  })
+
+  describe('.roots', function () {
+    it('returns nodes without inbound edges', function () {
+      const { graph, n1, n2 } = setup()
+
+      graph.addEdge(n1, n2)
+
+      const rootTokens = Array.from(graph.roots())
+      assert.deepEqual(rootTokens, [n1])
     })
   })
 })
