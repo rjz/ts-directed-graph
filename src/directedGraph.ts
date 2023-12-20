@@ -115,7 +115,7 @@ export default class DirectedGraph<T extends Node> {
   protected _pruneNode(id: Token): void {
     const existingRoots = this.roots()
     const connectedTokens = Array.from(this.edgesByNode.get(id)!)
-    this.removeNode(id)
+    this._removeNode(id)
 
     for (const token of connectedTokens) {
       const isDetached = this.#reverseEdgesByNode.get(token)!.size === 0
@@ -133,7 +133,7 @@ export default class DirectedGraph<T extends Node> {
     const outboundIds = Array.from(this.edgesByNode.get(id)!)
     const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!)
 
-    this.removeNode(id)
+    this._removeNode(id)
 
     for (const to of outboundIds) {
       for (const from of inboundIds) {

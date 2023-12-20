@@ -92,7 +92,7 @@ class DirectedGraph {
     _pruneNode(id) {
         const existingRoots = this.roots();
         const connectedTokens = Array.from(this.edgesByNode.get(id));
-        this.removeNode(id);
+        this._removeNode(id);
         for (const token of connectedTokens) {
             const isDetached = __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(token).size === 0;
             if (!existingRoots.has(token) && isDetached) {
@@ -107,7 +107,7 @@ class DirectedGraph {
     _collapseNode(id) {
         const outboundIds = Array.from(this.edgesByNode.get(id));
         const inboundIds = Array.from(__classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(id));
-        this.removeNode(id);
+        this._removeNode(id);
         for (const to of outboundIds) {
             for (const from of inboundIds) {
                 this.addEdge(from, to);
