@@ -50,7 +50,7 @@ export default class DirectedGraph<T extends Node> {
     return id
   }
 
-  removeNode(id: Token): void {
+  protected _removeNode(id: Token): void {
     const node = this.getNode(id)
 
     for (const t of this.#reverseEdgesByNode.get(id)!) {
@@ -69,17 +69,75 @@ export default class DirectedGraph<T extends Node> {
   }
 
   /**
+   *  Remove the subject node and any directly-connected edges
+   *
+   *  @param id - the ID of the node to be removed
+   *  @param strategy - The strategy to use when considering connected nodes.
+   *          One of:
+   *
+   *         - `'DEFAULT'` - the subject node's edges will be removed with no
+   *           further action. This may result in previously-connected nodes
+   *           being detached from the graph (effectively making them new "root"
+   *           notes)
+   *
+   *         - `'PRUNE'` - the subject node's edges will be removed, and any
+   *           newly-detached nodes removed from the graph
+   *
+   *         - `'COLLAPSE'` - the subject node's outbound edges will be
+   *           connected to any inbound nodes
+   *
+   *         If no strategy is specified, `'DEFAULT'` will be used.
+   */
+  removeNode(
+    id: Token,
+    strategy: 'DEFAULT' | 'PRUNE' | 'COLLAPSE' = 'DEFAULT',
+  ): void {
+    switch (strategy) {
+      case 'DEFAULT':
+        this._removeNode(id)
+        break
+      case 'PRUNE':
+        this._pruneNode(id)
+        break
+      case 'COLLAPSE':
+        this._collapseNode(id)
+        break
+      default:
+        const x: never = strategy
+        throw new Error(`Unknown deletion strategy '${x}'`)
+    }
+  }
+
+  /**
    *  Removes the subject node, recursively pruning any subtrees detached in the
    *  removal process
    */
-  pruneNode(id: Token): void {
-    const roots = this.roots()
+  protected _pruneNode(id: Token): void {
+    const existingRoots = this.roots()
+    const connectedTokens = Array.from(this.edgesByNode.get(id)!)
     this.removeNode(id)
 
-    const newRoots = this.roots()
-    for (const token of newRoots.values()) {
-      if (!roots.has(token)) {
-        this.pruneNode(token)
+    for (const token of connectedTokens) {
+      const isDetached = this.#reverseEdgesByNode.get(token)!.size === 0
+      if (!existingRoots.has(token) && isDetached) {
+        this._pruneNode(token)
+      }
+    }
+  }
+
+  /**
+   *  Removes the subject node, directly connecting any nodes previously
+   *  connected through the subject
+   */
+  protected _collapseNode(id: Token): void {
+    const outboundIds = Array.from(this.edgesByNode.get(id)!)
+    const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!)
+
+    this.removeNode(id)
+
+    for (const to of outboundIds) {
+      for (const from of inboundIds) {
+        this.addEdge(from, to)
       }
     }
   }
