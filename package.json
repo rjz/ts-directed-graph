@@ -1,6 +1,6 @@
 {
   "name": "ts-directed-graph",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "ISC",
@@ -17,9 +17,15 @@
   "mocha": {
     "recursive": true,
     "require": "ts-node/register",
-    "extension": ["ts"],
-    "spec": ["src"],
-    "watch-files": ["src"]
+    "extension": [
+      "ts"
+    ],
+    "spec": [
+      "src"
+    ],
+    "watch-files": [
+      "src"
+    ]
   },
   "scripts": {
     "build": "tsc",
