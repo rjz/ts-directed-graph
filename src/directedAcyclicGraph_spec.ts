@@ -50,8 +50,8 @@ describe('DirectedAcyclicGraph', function () {
 
       const edges = Array.from(sg.edges())
       assert.deepEqual(edges, [
-        ['N-4', 'N-5'],
-        ['N-4', 'N-6'],
+        ['N-4', 'N-5', undefined, undefined],
+        ['N-4', 'N-6', undefined, undefined],
       ])
     })
   })

@@ -19,10 +19,10 @@ export interface DirectedGraphOptions {
 /**
  *  DirectedGraph implements exactly that
  */
-export default class DirectedGraph<T extends Node> {
+export default class DirectedGraph<T extends Node, E = undefined> {
   private nodesByToken = new Map<Token, T>()
-  private edgesByNode = new Map<Token, Set<Token>>()
-  #reverseEdgesByNode = new Map<Token, Set<Token>>()
+  private edgesByNode = new Map<Token, Set<Edge<E>>>()
+  #reverseEdgesByNode = new Map<Token, Set<Edge<E>>>()
 
   protected emitter: Emitter
 
@@ -43,8 +43,8 @@ export default class DirectedGraph<T extends Node> {
     }
 
     this.nodesByToken.set(id, n)
-    this.#reverseEdgesByNode.set(id, new Set<Token>())
-    this.edgesByNode.set(id, new Set<Token>())
+    this.#reverseEdgesByNode.set(id, new Set<Edge<E>>())
+    this.edgesByNode.set(id, new Set<Edge<E>>())
     this.emitter.emit('node:added', n)
 
     return id
@@ -53,12 +53,24 @@ export default class DirectedGraph<T extends Node> {
   protected _removeNode(id: Token): void {
     const node = this.getNode(id)
 
-    for (const t of this.#reverseEdgesByNode.get(id)!) {
-      this.edgesByNode.get(t)!.delete(id)
+    for (const [from, to] of this.#reverseEdgesByNode.get(id)!) {
+      const s = this.edgesByNode.get(from)!
+      for (const edge of s) {
+        if (edge[1] === to) {
+          s.delete(edge)
+          break
+        }
+      }
     }
 
-    for (const t of this.edgesByNode.get(id)!) {
-      this.#reverseEdgesByNode.get(t)!.delete(id)
+    for (const [from, to] of this.edgesByNode.get(id)!) {
+      const s = this.#reverseEdgesByNode.get(to)!
+      for (const edge of s) {
+        if (edge[0] === from) {
+          s.delete(edge)
+          break
+        }
+      }
     }
 
     this.edgesByNode.delete(id)
@@ -114,7 +126,7 @@ export default class DirectedGraph<T extends Node> {
    */
   protected _pruneNode(id: Token): void {
     const existingRoots = this.roots()
-    const connectedTokens = Array.from(this.edgesByNode.get(id)!)
+    const connectedTokens = Array.from(this.edgesByNode.get(id)!).map(([, to]) => to)
     this._removeNode(id)
 
     for (const token of connectedTokens) {
@@ -130,8 +142,8 @@ export default class DirectedGraph<T extends Node> {
    *  connected through the subject
    */
   protected _collapseNode(id: Token): void {
-    const outboundIds = Array.from(this.edgesByNode.get(id)!)
-    const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!)
+    const outboundIds = Array.from(this.edgesByNode.get(id)!).map(([, to]) => to)
+    const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!).map(([from]) => from)
 
     this._removeNode(id)
 
@@ -169,11 +181,11 @@ export default class DirectedGraph<T extends Node> {
     return new Set(this.nodesByToken.values())
   }
 
-  edges(): Set<Edge> {
-    const edges = new Set<[from: Token, to: Token]>()
-    for (const [n, cs] of this.edgesByNode) {
-      for (const c of cs) {
-        edges.add([n, c])
+  edges(): Set<Edge<E>> {
+    const edges = new Set<Edge<E>>()
+    for (const es of this.edgesByNode.values()) {
+      for (const e of es) {
+        edges.add(e)
       }
     }
 
@@ -193,16 +205,24 @@ export default class DirectedGraph<T extends Node> {
   /**
    *  Add a single edge connecting the two nodes.
    */
-  addEdge(from: Token, to: Token): void {
+  addEdge(from: Token, to: Token, label?: E, weight?: number): void {
     this.assertNodeExists(from)
     this.assertNodeExists(to)
-    this.edgesByNode.get(from)!.add(to)
-    this.#reverseEdgesByNode.get(to)!.add(from)
-    this.emitter.emit('edge:added', [from, to])
+
+    const edge: Edge<E> = [from, to, label, weight]
+
+    this.edgesByNode.get(from)!.add(edge)
+    this.#reverseEdgesByNode.get(to)!.add(edge)
+    this.emitter.emit('edge:added', edge)
   }
 
   edgeExists(from: Token, to: Token): boolean {
-    return this.edgesByNode.get(from)!.has(to)
+    for (const edge of this.edgesByNode.get(from)!) {
+      if (edge[1] === to) {
+        return true
+      }
+    }
+    return false
   }
 
   /**
@@ -211,11 +231,16 @@ export default class DirectedGraph<T extends Node> {
   edgesFrom(t: Token): Set<T> {
     this.assertNodeExists(t)
     const edgesFrom = new Set<T>()
-    for (const c of this.edgesByNode.get(t)!) {
+    for (const [, c] of this.edgesByNode.get(t)!) {
       edgesFrom.add(this.getNode(c))
     }
 
     return edgesFrom
+  }
+
+  getEdgesFrom(t: Token): Set<Edge<E>> {
+    this.assertNodeExists(t)
+    return new Set(this.edgesByNode.get(t)!)
   }
 
   /**

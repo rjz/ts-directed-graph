@@ -23,7 +23,7 @@ function expectEvent(
 
 describe('DirectedGraph', function () {
   function setup(emitter?: EventEmitter) {
-    const graph = new DirectedGraph<TestNodeType>({ emitter })
+    const graph = new DirectedGraph<TestNodeType, 'test-label'>({ emitter })
 
     const n1 = graph.addNode({ id: 'N-1', value: 0 })
     const n2 = graph.addNode({ id: 'N-2', value: 0 })
@@ -61,12 +61,21 @@ describe('DirectedGraph', function () {
       const { graph, n1, n2 } = setup(emitter)
 
       const p = expectEvent(emitter, 'edge:added', (e) =>
-        assert.deepEqual(e, ['N-1', 'N-2']),
+        assert.deepEqual(e, ['N-1', 'N-2', undefined, undefined]),
       )
 
       graph.addEdge(n1, n2)
 
       return p
+    })
+
+    it('adds an edge with a label and weight', function () {
+      const { graph, n1, n2 } = setup()
+
+      graph.addEdge(n1, n2, 'test-label', 123)
+
+      const edges = Array.from(graph.edges())
+      assert.deepEqual(edges, [[n1, n2, 'test-label', 123]])
     })
   })
 

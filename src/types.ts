@@ -8,4 +8,9 @@ export function isNode(x: any): x is Node {
   return typeof x === 'object' && typeof x.id === 'string'
 }
 
-export type Edge = [from: Token, to: Token]
+export type Edge<T = undefined> = [
+  from: Token,
+  to: Token,
+  label?: T,
+  weight?: number,
+]
