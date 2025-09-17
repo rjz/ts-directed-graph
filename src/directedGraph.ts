@@ -126,7 +126,9 @@ export default class DirectedGraph<T extends Node, E = undefined> {
    */
   protected _pruneNode(id: Token): void {
     const existingRoots = this.roots()
-    const connectedTokens = Array.from(this.edgesByNode.get(id)!).map(([, to]) => to)
+    const connectedTokens = Array.from(this.edgesByNode.get(id)!).map(
+      ([, to]) => to,
+    )
     this._removeNode(id)
 
     for (const token of connectedTokens) {
@@ -142,8 +144,12 @@ export default class DirectedGraph<T extends Node, E = undefined> {
    *  connected through the subject
    */
   protected _collapseNode(id: Token): void {
-    const outboundIds = Array.from(this.edgesByNode.get(id)!).map(([, to]) => to)
-    const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!).map(([from]) => from)
+    const outboundIds = Array.from(this.edgesByNode.get(id)!).map(
+      ([, to]) => to,
+    )
+    const inboundIds = Array.from(this.#reverseEdgesByNode.get(id)!).map(
+      ([from]) => from,
+    )
 
     this._removeNode(id)
 
@@ -226,21 +232,26 @@ export default class DirectedGraph<T extends Node, E = undefined> {
   }
 
   /**
-   *  Return the set of nodes added to `n`
+   *  Return the set of nodes that have a direct outbound edge from this node
    */
-  edgesFrom(t: Token): Set<T> {
+  outboundNodes(t: Token): Set<T> {
     this.assertNodeExists(t)
-    const edgesFrom = new Set<T>()
+    const outboundNodes = new Set<T>()
     for (const [, c] of this.edgesByNode.get(t)!) {
-      edgesFrom.add(this.getNode(c))
+      outboundNodes.add(this.getNode(c))
     }
 
-    return edgesFrom
+    return outboundNodes
   }
 
-  getEdgesFrom(t: Token): Set<Edge<E>> {
+  outboundEdges(t: Token): Set<Edge<E>> {
     this.assertNodeExists(t)
     return new Set(this.edgesByNode.get(t)!)
+  }
+
+  inboundEdges(t: Token): Set<Edge<E>> {
+    this.assertNodeExists(t)
+    return new Set(this.#reverseEdgesByNode.get(t)!)
   }
 
   /**
@@ -248,13 +259,13 @@ export default class DirectedGraph<T extends Node, E = undefined> {
    */
   visit(t: Token, iter: (node: T) => void): void {
     const seen = new Set<Token>()
-    const nodes = this.edgesFrom(t)
+    const nodes = this.outboundNodes(t)
 
     for (const n of nodes) {
       iter(n)
       seen.add(n.id)
 
-      for (const c of this.edgesFrom(n.id)) {
+      for (const c of this.outboundNodes(n.id)) {
         if (!seen.has(c.id)) {
           nodes.add(c)
         }

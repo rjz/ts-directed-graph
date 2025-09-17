@@ -31,7 +31,7 @@ export default class DirectedAcyclicGraph<
     const root = this.getNode(id)
     graph.addNode(root)
 
-    const edges = this.getEdgesFrom(id)
+    const edges = this.outboundEdges(id)
     for (const [, to, label, weight] of edges) {
       this._populate(to, graph)
       graph.addEdge(root.id, to, label, weight)

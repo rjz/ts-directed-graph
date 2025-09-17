@@ -1,7 +1,7 @@
 Graph
 ==============================================================================
 
-Basic graph implementations as building blocks for better things.
+Basic graph implementations as building blocks for bigger things.
 
 Test
 -------------------------------------------------------------------------------
