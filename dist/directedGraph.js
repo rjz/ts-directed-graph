@@ -38,11 +38,23 @@ class DirectedGraph {
     }
     _removeNode(id) {
         const node = this.getNode(id);
-        for (const t of __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(id)) {
-            this.edgesByNode.get(t).delete(id);
+        for (const [from, to] of __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(id)) {
+            const s = this.edgesByNode.get(from);
+            for (const edge of s) {
+                if (edge[1] === to) {
+                    s.delete(edge);
+                    break;
+                }
+            }
         }
-        for (const t of this.edgesByNode.get(id)) {
-            __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(t).delete(id);
+        for (const [from, to] of this.edgesByNode.get(id)) {
+            const s = __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(to);
+            for (const edge of s) {
+                if (edge[0] === from) {
+                    s.delete(edge);
+                    break;
+                }
+            }
         }
         this.edgesByNode.delete(id);
         this.nodesByToken.delete(id);
@@ -91,7 +103,7 @@ class DirectedGraph {
      */
     _pruneNode(id) {
         const existingRoots = this.roots();
-        const connectedTokens = Array.from(this.edgesByNode.get(id));
+        const connectedTokens = Array.from(this.edgesByNode.get(id)).map(([, to]) => to);
         this._removeNode(id);
         for (const token of connectedTokens) {
             const isDetached = __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(token).size === 0;
@@ -105,8 +117,8 @@ class DirectedGraph {
      *  connected through the subject
      */
     _collapseNode(id) {
-        const outboundIds = Array.from(this.edgesByNode.get(id));
-        const inboundIds = Array.from(__classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(id));
+        const outboundIds = Array.from(this.edgesByNode.get(id)).map(([, to]) => to);
+        const inboundIds = Array.from(__classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(id)).map(([from]) => from);
         this._removeNode(id);
         for (const to of outboundIds) {
             for (const from of inboundIds) {
@@ -138,9 +150,9 @@ class DirectedGraph {
     }
     edges() {
         const edges = new Set();
-        for (const [n, cs] of this.edgesByNode) {
-            for (const c of cs) {
-                edges.add([n, c]);
+        for (const es of this.edgesByNode.values()) {
+            for (const e of es) {
+                edges.add(e);
             }
         }
         return edges;
@@ -156,37 +168,51 @@ class DirectedGraph {
     /**
      *  Add a single edge connecting the two nodes.
      */
-    addEdge(from, to) {
+    addEdge(from, to, label, weight) {
         this.assertNodeExists(from);
         this.assertNodeExists(to);
-        this.edgesByNode.get(from).add(to);
-        __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(to).add(from);
-        this.emitter.emit('edge:added', [from, to]);
+        const edge = [from, to, label, weight];
+        this.edgesByNode.get(from).add(edge);
+        __classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(to).add(edge);
+        this.emitter.emit('edge:added', edge);
     }
     edgeExists(from, to) {
-        return this.edgesByNode.get(from).has(to);
+        for (const edge of this.edgesByNode.get(from)) {
+            if (edge[1] === to) {
+                return true;
+            }
+        }
+        return false;
     }
     /**
-     *  Return the set of nodes added to `n`
+     *  Return the set of nodes that have a direct outbound edge from this node
      */
-    edgesFrom(t) {
+    outboundNodes(t) {
         this.assertNodeExists(t);
-        const edgesFrom = new Set();
-        for (const c of this.edgesByNode.get(t)) {
-            edgesFrom.add(this.getNode(c));
+        const outboundNodes = new Set();
+        for (const [, c] of this.edgesByNode.get(t)) {
+            outboundNodes.add(this.getNode(c));
         }
-        return edgesFrom;
+        return outboundNodes;
+    }
+    outboundEdges(t) {
+        this.assertNodeExists(t);
+        return new Set(this.edgesByNode.get(t));
+    }
+    inboundEdges(t) {
+        this.assertNodeExists(t);
+        return new Set(__classPrivateFieldGet(this, _DirectedGraph_reverseEdgesByNode, "f").get(t));
     }
     /**
      * `iter` will be called for all nodes with edges connected to `node`
      */
     visit(t, iter) {
         const seen = new Set();
-        const nodes = this.edgesFrom(t);
+        const nodes = this.outboundNodes(t);
         for (const n of nodes) {
             iter(n);
             seen.add(n.id);
-            for (const c of this.edgesFrom(n.id)) {
+            for (const c of this.outboundNodes(n.id)) {
                 if (!seen.has(c.id)) {
                     nodes.add(c);
                 }

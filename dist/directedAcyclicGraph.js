@@ -16,21 +16,21 @@ class DirectedAcyclicGraph extends directedGraph_1.default {
     /**
      *  Check for cyclic relationships
      */
-    addEdge(from, to) {
+    addEdge(from, to, label, weight) {
         this.visit(to, function (n) {
             if (n.id === from) {
                 throw new AcyclicViolationError(`Nodes ${from} <=> ${n.id} violate acyclic constraint`);
             }
         });
-        super.addEdge(from, to);
+        super.addEdge(from, to, label, weight);
     }
     _populate(id, graph) {
         const root = this.getNode(id);
         graph.addNode(root);
-        const nodes = this.edgesFrom(id);
-        for (const n of nodes) {
-            this._populate(n.id, graph);
-            graph.addEdge(root.id, n.id);
+        const edges = this.outboundEdges(id);
+        for (const [, to, label, weight] of edges) {
+            this._populate(to, graph);
+            graph.addEdge(root.id, to, label, weight);
         }
         return graph;
     }

@@ -7,10 +7,22 @@ function toMermaid(g) {
     const hasSomeEdge = new Set();
     let diagram = 'flowchart LR\n';
     for (const n of edgesByNode) {
-        const [from, to] = n;
+        const [from, to, label, weight] = n;
         hasSomeEdge.add(from);
         hasSomeEdge.add(to);
-        diagram += `  ${from} --> ${to}\n`;
+        let edgeLabel = '';
+        if (label) {
+            edgeLabel += label;
+        }
+        if (typeof weight !== 'undefined') {
+            edgeLabel += ` (${weight})`;
+        }
+        if (edgeLabel) {
+            diagram += `  ${from} -- ${edgeLabel.trim()} --> ${to}\n`;
+        }
+        else {
+            diagram += `  ${from} --> ${to}\n`;
+        }
     }
     for (const n of nodes) {
         if (!hasSomeEdge.has(n.id)) {

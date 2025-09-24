@@ -12,7 +12,7 @@ export interface DirectedGraphOptions {
 /**
  *  DirectedGraph implements exactly that
  */
-export default class DirectedGraph<T extends Node> {
+export default class DirectedGraph<T extends Node, E = undefined> {
     #private;
     private nodesByToken;
     private edgesByNode;
@@ -60,18 +60,20 @@ export default class DirectedGraph<T extends Node> {
     replaceNode(node: T): void;
     roots(): Set<Token>;
     nodes(): Set<T>;
-    edges(): Set<Edge>;
+    edges(): Set<Edge<E>>;
     has(t: Token): boolean;
     getNode(t: Token): T;
     /**
      *  Add a single edge connecting the two nodes.
      */
-    addEdge(from: Token, to: Token): void;
+    addEdge(from: Token, to: Token, label?: E, weight?: number): void;
     edgeExists(from: Token, to: Token): boolean;
     /**
-     *  Return the set of nodes added to `n`
+     *  Return the set of nodes that have a direct outbound edge from this node
      */
-    edgesFrom(t: Token): Set<T>;
+    outboundNodes(t: Token): Set<T>;
+    outboundEdges(t: Token): Set<Edge<E>>;
+    inboundEdges(t: Token): Set<Edge<E>>;
     /**
      * `iter` will be called for all nodes with edges connected to `node`
      */

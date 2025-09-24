@@ -3,4 +3,9 @@ export interface Node {
     id: Token;
 }
 export declare function isNode(x: any): x is Node;
-export type Edge = [from: Token, to: Token];
+export type Edge<T = undefined> = [
+    from: Token,
+    to: Token,
+    label?: T,
+    weight?: number
+];
