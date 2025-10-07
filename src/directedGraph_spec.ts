@@ -23,7 +23,7 @@ function expectEvent(
 
 describe('DirectedGraph', function () {
   function setup(emitter?: EventEmitter) {
-    const graph = new DirectedGraph<TestNodeType>({ emitter })
+        const graph = new DirectedGraph<TestNodeType, string>({ emitter })
 
     const n1 = graph.addNode({ id: 'N-1', value: 0 })
     const n2 = graph.addNode({ id: 'N-2', value: 0 })
@@ -52,8 +52,8 @@ describe('DirectedGraph', function () {
       graph.addEdge(n1, n2)
 
       assert.ok(graph.getNode('N-1'), 'node not found')
-      assert.equal(1, graph.edgesFrom('N-1').size, 'missing edge from N-1')
-      assert.equal(0, graph.edgesFrom('N-2').size, 'missing edge from N-1')
+      assert.equal(1, graph.outboundNodes('N-1').size, 'missing edge from N-1')
+      assert.equal(0, graph.outboundNodes('N-2').size, 'missing edge from N-1')
     })
 
     it('emits "edge:added" event', function () {
@@ -61,12 +61,53 @@ describe('DirectedGraph', function () {
       const { graph, n1, n2 } = setup(emitter)
 
       const p = expectEvent(emitter, 'edge:added', (e) =>
-        assert.deepEqual(e, ['N-1', 'N-2']),
+        assert.deepEqual(e, ['N-1', 'N-2', undefined, undefined]),
       )
 
       graph.addEdge(n1, n2)
 
       return p
+    })
+
+    it('adds an edge with a label and weight', function () {
+      const { graph, n1, n2 } = setup()
+
+      graph.addEdge(n1, n2, 'test-label', 123)
+
+      const edges = Array.from(graph.edges())
+      assert.deepEqual(edges, [[n1, n2, 'test-label', 123]])
+    })
+  })
+
+  describe('.inboundEdges', function () {
+    it('returns the expected edges', function () {
+      const { graph, n1, n2 } = setup()
+      const n3 = graph.addNode({ id: 'N-3', value: 0 })
+
+      graph.addEdge(n1, n2, 'n1-n2', 1)
+      graph.addEdge(n3, n2, 'n3-n2', 2)
+
+      const edges = Array.from(graph.inboundEdges(n2))
+      assert.deepEqual(edges, [
+        [n1, n2, 'n1-n2', 1],
+        [n3, n2, 'n3-n2', 2],
+      ])
+    })
+  })
+
+  describe('.outboundEdges', function () {
+    it('returns the expected edges', function () {
+      const { graph, n1, n2 } = setup()
+      const n3 = graph.addNode({ id: 'N-3', value: 0 })
+
+      graph.addEdge(n1, n2, 'n1-n2', 1)
+      graph.addEdge(n1, n3, 'n1-n3', 2)
+
+      const edges = Array.from(graph.outboundEdges(n1))
+      assert.deepEqual(edges, [
+        [n1, n2, 'n1-n2', 1],
+        [n1, n3, 'n1-n3', 2],
+      ])
     })
   })
 
@@ -103,7 +144,7 @@ describe('DirectedGraph', function () {
         'Node "N-2" not present in graph',
       )
 
-      assert.equal(0, graph.edgesFrom('N-1').size, 'unexpected edge from N-1')
+      assert.equal(0, graph.outboundNodes('N-1').size, 'unexpected edge from N-1')
     })
 
     it('emits "node:removed" event', function () {

@@ -10,11 +10,12 @@ export class AcyclicViolationError<T> extends TypeError {}
  */
 export default class DirectedAcyclicGraph<
   T extends Node,
-> extends DirectedGraph<T> {
+  E = undefined,
+> extends DirectedGraph<T, E> {
   /**
    *  Check for cyclic relationships
    */
-  addEdge(from: Token, to: Token) {
+  addEdge(from: Token, to: Token, label?: E, weight?: number) {
     this.visit(to, function (n) {
       if (n.id === from) {
         throw new AcyclicViolationError(
@@ -23,17 +24,17 @@ export default class DirectedAcyclicGraph<
       }
     })
 
-    super.addEdge(from, to)
+    super.addEdge(from, to, label, weight)
   }
 
-  protected _populate(id: Token, graph: DirectedAcyclicGraph<T>) {
+  protected _populate(id: Token, graph: DirectedAcyclicGraph<T, E>) {
     const root = this.getNode(id)
     graph.addNode(root)
 
-    const nodes = this.edgesFrom(id)
-    for (const n of nodes) {
-      this._populate(n.id, graph)
-      graph.addEdge(root.id, n.id)
+    const edges = this.outboundEdges(id)
+    for (const [, to, label, weight] of edges) {
+      this._populate(to, graph)
+      graph.addEdge(root.id, to, label, weight)
     }
 
     return graph
@@ -43,8 +44,8 @@ export default class DirectedAcyclicGraph<
    *  Returns a new `DirectedAcyclicGraph` populated with the subgraph starting
    *  at `id`
    */
-  subgraph(id: Token): DirectedAcyclicGraph<T> {
-    const copy = new DirectedAcyclicGraph<T>()
+  subgraph(id: Token): DirectedAcyclicGraph<T, E> {
+    const copy = new DirectedAcyclicGraph<T, E>()
     return this._populate(id, copy)
   }
 }

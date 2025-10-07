@@ -1,7 +1,9 @@
 import DirectedGraph from './directedGraph'
 import { Token, Node } from './types'
 
-export function toMermaid<T extends Node>(g: DirectedGraph<T>): string {
+export function toMermaid<T extends Node, E = undefined>(
+  g: DirectedGraph<T, E>,
+): string {
   const nodes = g.nodes()
   const edgesByNode = g.edges()
 
@@ -10,10 +12,24 @@ export function toMermaid<T extends Node>(g: DirectedGraph<T>): string {
   let diagram = 'flowchart LR\n'
 
   for (const n of edgesByNode) {
-    const [from, to] = n
+    const [from, to, label, weight] = n
     hasSomeEdge.add(from)
     hasSomeEdge.add(to)
-    diagram += `  ${from} --> ${to}\n`
+
+    let edgeLabel = ''
+    if (label) {
+      edgeLabel += label
+    }
+
+    if (typeof weight !== 'undefined') {
+      edgeLabel += ` (${weight})`
+    }
+
+    if (edgeLabel) {
+      diagram += `  ${from} -- ${edgeLabel.trim()} --> ${to}\n`
+    } else {
+      diagram += `  ${from} --> ${to}\n`
+    }
   }
 
   for (const n of nodes) {

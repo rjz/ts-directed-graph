@@ -1,7 +1,7 @@
 Graph
 ==============================================================================
 
-Basic graph implementations as building blocks for better things.
+Basic graph implementations as building blocks for bigger things.
 
 Test
 -------------------------------------------------------------------------------
@@ -27,6 +27,9 @@ const n3 = graph.addNode({ id: 'N-3' })
 
 graph.addEdge('N-1', 'N-2')
 graph.addEdge('N-2', 'N-3')
+
+// Edges can have labels and weights
+graph.addEdge('N-1', 'N-3', 'a label', 123)
 ```
 
 #### Events
@@ -49,12 +52,12 @@ emitter.on('node:added', (arg0) => { /* ... */ })
 
 For an instance of `DirectedGraph<T>`, the event list includes:
 
-| event           | arg0   |
-| --------------- | ------ |
-| `node:added`    | `T`    |
-| `node:removed`  | `T`    |
-| `node:replaced` | `T`    |
-| `edge:added`    | `Edge` |
+| event           | arg0      |
+| --------------- | --------- |
+| `node:added`    | `T`       |
+| `node:removed`  | `T`       |
+| `node:replaced` | `T`       |
+| `edge:added`    | `Edge<E>` |
 
 ### `DirectedAcyclicGraph`
 
